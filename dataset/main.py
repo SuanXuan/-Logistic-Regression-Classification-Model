@@ -13,14 +13,23 @@ def preprocess_data():
     review_file = ['./dataset/reviews-0.tsv', './dataset/reviews-1.tsv', './dataset/reviews-2.tsv', './dataset/reviews-3.tsv']
     # Combine files and pay attentation on unicode
     products = [pd.read_csv(f, sep='\t', names=['id', 'category', 'title'], encoding='utf-8') for f in product_file]
-    reviews = [pd.read_csv(f, sep='\t', names=['id', 'rating', 'review'], encoding='utf-8') for f in review_file]
+    reviews = []
+    for f in review_file:
+        # Read data from file
+        df = pd.read_csv(f, sep='\t', names=['id', 'rating', 'review'], encoding='utf-8')
+        # Check if the file is 'reviews-2.tsv' and switch columns if needed
+        if 'reviews-2.tsv' in f:
+            df[['id', 'rating']] = df[['rating', 'id']]  # Swap 'id' and 'rating' columns
+        reviews.append(df)
     products_dataframe = pd.concat(products , ignore_index=True)
     # Correct some typo labels about 'Kitchen'
     products_dataframe['category'] = products_dataframe['category'].replace('Ktchen', 'Kitchen')
     reviews_dataframe = pd.concat(reviews, ignore_index=True)
     # Merge product and review dataframes on 'id'
     merged_data = pd.merge(products_dataframe, reviews_dataframe, on='id')
-    return merged_data
+    # Drop the NaN row
+    merged_data_clean = merged_data.dropna()
+    return merged_data_clean
 
 # Feature Engineering
 def feature_engineering(data):
